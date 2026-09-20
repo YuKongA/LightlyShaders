@@ -14,7 +14,6 @@
 #include "core/renderviewport.h"
 #include "effect/effecthandler.h"
 #include "opengl/glplatform.h"
-#include "wayland/blur.h"
 #include "wayland/display.h"
 #include "wayland/surface.h"
 #include "utils/xcbutils.h"
@@ -42,6 +41,13 @@ static void ensureResources()
 {
     // Must initialize resources manually because the effect is a static lib.
     Q_INIT_RESOURCE(blur);
+}
+
+// Scales a rectangle by a scalar factor. Newer KWin dropped the scaledRect
+// helper that used to live in the blur effect, so keep a local copy.
+static QRectF scaledRect(const QRectF &rect, qreal scale)
+{
+    return QRectF(rect.x() * scale, rect.y() * scale, rect.width() * scale, rect.height() * scale);
 }
 
 namespace KWin
@@ -234,8 +240,11 @@ void BlurEffect::updateBlurRegion(EffectWindow *w)
 
     SurfaceInterface *surf = w->surface();
 
-    if (surf && surf->blur()) {
-        content = static_cast<QRegion>(surf->blur()->region());
+    if (surf) {
+        const RegionF blurRegion = surf->blurRegion();
+        if (!blurRegion.isEmpty()) {
+            content = static_cast<QRegion>(blurRegion.rounded());
+        }
     }
 
     if (auto internal = w->internalWindow()) {
@@ -421,11 +430,11 @@ QRegion BlurEffect::blurRegion(EffectWindow *w) const
     return region;
 }
 
-void BlurEffect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime)
+void BlurEffect::prePaintScreen(ScreenPrePaintData &data)
 {
     m_currentScreen = effects->waylandDisplay() ? data.screen : nullptr;
 
-    effects->prePaintScreen(data, presentTime);
+    effects->prePaintScreen(data);
 }
 
 bool BlurEffect::shouldBlur(const EffectWindow *w, int mask, const WindowPaintData &data) const

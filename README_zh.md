@@ -2,13 +2,13 @@
 
 # LightlyShaders v3.0
 
-此效果与已有的 Plasma 特效一起正常工作。本 Kubuntu 分支面向 KDE Plasma 6.6.x / KWin 6.6.x，已在 Kubuntu 26.04 上测试。
+此效果与 Plasma 自带特效一起正常工作，支持 KDE Plasma/KWin 6.7 及更高版本。本 Kubuntu 分支已在 Kubuntu 26.04 上测试。
 
 ![default](screenshot.png)
 
 # 依赖关系
 
-需要 KDE Plasma/KWin 6.6.x，以及 Qt 6、KF6、KWin、KDecoration3、X11 和 XCB 开发包。
+需要 Qt 6、KF6、KWin、KDecoration3、X11 和 XCB 开发包。
 
 **Kubuntu 26.04 / Ubuntu 系统**：
 
@@ -22,9 +22,7 @@ sudo apt install \
     libkf6i18n-dev libkf6kcmutils-dev libkf6kio-dev \
     libkf6notifications-dev libkf6service-dev libkf6widgetsaddons-dev \
     libkf6windowsystem-dev kwin-dev libkdecorations3-dev libepoxy-dev \
-    libx11-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev \
-    libxcb-xfixes0-dev libxcb-composite0-dev libxcb-randr0-dev \
-    libxcb-shm0-dev libxcb-res0-dev libxcb-sync-dev
+    libx11-dev libxcb1-dev
 ```
 
 # 手动安装
@@ -36,4 +34,4 @@ cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make
 sudo make install
 ```
 
-**注：** Plasma/KWin 更新后可能需要重新编译插件。如果 CMake 报告缺少 XCB 头文件，请先安装上面的完整依赖列表，再重新执行配置命令。
+**注：** Plasma/KWin 更新后可能需要重新编译插件，以适配 KWin API 的变化。如果 CMake 报告缺少头文件，请先安装上面的开发包，再重新执行配置命令。

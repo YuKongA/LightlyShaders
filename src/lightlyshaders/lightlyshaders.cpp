@@ -219,11 +219,11 @@ LightlyShadersEffect::paintScreen(const RenderTarget &renderTarget, const Render
 }
 
 void
-LightlyShadersEffect::prePaintWindow(RenderView *view, EffectWindow *w, WindowPrePaintData &data, std::chrono::milliseconds presentTime)
+LightlyShadersEffect::prePaintWindow(RenderView *view, EffectWindow *w, WindowPrePaintData &data)
 {
     if (!isValidWindow(w) )
     {
-        effects->prePaintWindow(view, w, data, presentTime);
+        effects->prePaintWindow(view, w, data);
         return;
     }
 
@@ -233,7 +233,7 @@ LightlyShadersEffect::prePaintWindow(RenderView *view, EffectWindow *w, WindowPr
     // translucent to make KWin blend the corners correctly.
     data.setTranslucent();
 
-    effects->prePaintWindow(view, w, data, presentTime);
+    effects->prePaintWindow(view, w, data);
 }
 
 bool
