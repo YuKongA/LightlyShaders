@@ -5,6 +5,11 @@
                           http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
     <kcfgfile name="lightlyshaders.conf"/>
     <group name="General">
+        <entry name="ExcludedApplications" type="StringList">
+            <label>Applications excluded from LightlyShaders</label>
+            <default></default>
+        </entry>
+
         <entry name="Roundness" type="Int">
             <default>8</default>
         </entry>

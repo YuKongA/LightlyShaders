@@ -21,8 +21,9 @@ target_link_libraries(kwin_lightlyshaders_config
     KF6::ConfigGui
     KF6::GlobalAccel
     KF6::WindowSystem
-    KF6::KCMUtils   
-    KF6::I18n         
+    KF6::KCMUtils
+    KF6::I18n
+    KF6::WidgetsAddons
 
     lshelper
 )

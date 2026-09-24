@@ -88,6 +88,7 @@ LightlyShadersEffect::~LightlyShadersEffect()
 void
 LightlyShadersEffect::windowDeleted(EffectWindow *w)
 {
+    m_helper->windowDeleted(w);
     m_windows.remove(w);
 }
 
@@ -242,6 +243,7 @@ LightlyShadersEffect::isValidWindow(EffectWindow *w)
     if (!m_shader
             || !m_windows[w].isManaged
             || m_windows[w].skipEffect
+            || m_helper->isExcludedWindow(w)
         )
     {
         return false;

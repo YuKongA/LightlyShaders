@@ -2,6 +2,8 @@
 #include "lightlyshaders_config.h"
 
 #include <QBitmap>
+#include <QFile>
+#include <QFileInfo>
 #include <QPainter>
 #include <QPainterPath>
 #include <QtMath>
@@ -40,6 +42,29 @@ LSHelper::reconfigure()
     m_shadowOffset = LightlyShadersConfig::shadowOffset();
     m_size = LightlyShadersConfig::roundness();
     m_disabledForMaximized = LightlyShadersConfig::disabledForMaximized();
+    m_exclusionRules.clear();
+    for (const QString &entry : LightlyShadersConfig::excludedApplications()) {
+        const QString trimmed = entry.trimmed();
+        if (trimmed.isEmpty()) {
+            continue;
+        }
+
+        ExclusionRule rule{trimmed, true, true};
+        constexpr auto windowPrefix = "window:";
+        constexpr auto processPrefix = "process:";
+        if (trimmed.startsWith(QLatin1String(windowPrefix), Qt::CaseInsensitive)) {
+            rule.pattern = trimmed.mid(static_cast<int>(qstrlen(windowPrefix))).trimmed();
+            rule.matchProcess = false;
+        } else if (trimmed.startsWith(QLatin1String(processPrefix), Qt::CaseInsensitive)) {
+            rule.pattern = trimmed.mid(static_cast<int>(qstrlen(processPrefix))).trimmed();
+            rule.matchWindow = false;
+        }
+
+        if (!rule.pattern.isEmpty()) {
+            m_exclusionRules.append(rule);
+        }
+    }
+    m_processIdentities.clear();
 
     if(m_cornersType == SquircledCorners) {
         m_size = m_size * 0.5 * m_squircleRatio;
@@ -99,7 +124,7 @@ LSHelper::roundBlurRegion(EffectWindow *w, QRegion *blur_region)
         return;
     }
 
-    if(!m_managed.contains(w)) {
+    if(!m_managed.contains(w) || isExcludedWindow(w)) {
         return;
     }
 
@@ -224,6 +249,78 @@ LSHelper::hasShadow(EffectWindow *w)
     return false;
 }
 
+bool
+LSHelper::isExcludedWindow(EffectWindow *w) const
+{
+    if (!w || m_exclusionRules.isEmpty()) {
+        return false;
+    }
+
+    const auto matches = [](const QString &identifier, const QString &pattern) {
+        return !identifier.isEmpty() && identifier.contains(pattern, Qt::CaseInsensitive);
+    };
+
+    for (const ExclusionRule &rule : m_exclusionRules) {
+        if (rule.matchWindow
+            && (matches(w->windowClass(), rule.pattern)
+                || matches(w->windowRole(), rule.pattern)
+                || matches(w->caption(), rule.pattern))) {
+            return true;
+        }
+
+        if (rule.matchProcess && matches(processIdentityForWindow(w), rule.pattern)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+QString
+LSHelper::processIdentityForWindow(EffectWindow *w) const
+{
+    if (!w) {
+        return {};
+    }
+
+    if (const auto it = m_processIdentities.constFind(w); it != m_processIdentities.constEnd()) {
+        return it.value();
+    }
+
+    QStringList parts;
+    const qint64 pid = w->pid();
+    if (pid > 0) {
+        QFile commFile(QStringLiteral("/proc/%1/comm").arg(pid));
+        if (commFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            const QString name = QString::fromLocal8Bit(commFile.readLine()).trimmed();
+            if (!name.isEmpty()) {
+                parts.append(name);
+            }
+        }
+
+        QFile cmdlineFile(QStringLiteral("/proc/%1/cmdline").arg(pid));
+        if (cmdlineFile.open(QIODevice::ReadOnly)) {
+            const QByteArray cmdline = cmdlineFile.readAll();
+            const int separator = cmdline.indexOf('\0');
+            const QByteArray firstArg = separator >= 0 ? cmdline.left(separator) : cmdline;
+            const QString name = QFileInfo(QString::fromLocal8Bit(firstArg)).fileName();
+            if (!name.isEmpty() && !parts.contains(name, Qt::CaseInsensitive)) {
+                parts.append(name);
+            }
+        }
+    }
+
+    const QString identity = parts.join(QLatin1Char(' '));
+    m_processIdentities.insert(w, identity);
+    return identity;
+}
+
+void
+LSHelper::windowDeleted(EffectWindow *w)
+{
+    m_processIdentities.remove(w);
+}
+
 bool 
 LSHelper::isManagedWindow(EffectWindow *w)
 {
@@ -287,6 +384,8 @@ LSHelper::blurWindowAdded(EffectWindow *w)
 void
 LSHelper::blurWindowDeleted(EffectWindow *w)
 {
+    windowDeleted(w);
+
     if(m_managed.contains(w)) {
         m_managed.removeAll(w);
     }

@@ -222,6 +222,29 @@
       </widget>
      </item>    
      <item>
+      <widget class="QLabel" name="excludedApplicationsLabel">
+       <property name="text">
+        <string>Excluded applications:</string>
+       </property>
+       <property name="toolTip">
+        <string>Case-insensitive substring matched against the window class, role, title, or process name. Prefix with window: to match only the window, or process: to exclude all windows from a matching process. Without a prefix, both are matched.</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="KEditListWidget" name="kcfg_ExcludedApplications">
+       <property name="toolTip">
+        <string>Windows matching an entry will not be rounded or have their blur region rounded. Examples: TinyPasture, process:TinyPasture, window:TinyPasture</string>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>100</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -239,5 +262,12 @@
   </layout>
  </widget>
  <resources/>
+ <customwidgets>
+  <customwidget>
+   <class>KEditListWidget</class>
+   <extends>QWidget</extends>
+   <header>keditlistwidget.h</header>
+  </customwidget>
+ </customwidgets>
  <connections/>
 </ui>
