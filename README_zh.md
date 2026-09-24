@@ -4,7 +4,7 @@
 
 LightlyShaders 用于窗口圆角，并提供可配置的内外描边和阴影处理。此效果可以与 Plasma 自带特效一起正常工作，支持 KDE Plasma/KWin 6.7 及更高版本。本 Kubuntu 分支已在 Kubuntu 26.04 上测试。
 
-![default](screenshot.png)
+![screenshot](screenshot.webp)
 
 ## 功能
 

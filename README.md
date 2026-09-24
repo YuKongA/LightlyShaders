@@ -4,7 +4,7 @@ English | [中文](README_zh.md)
 
 LightlyShaders rounds window corners and adds configurable outlines and shadow handling. It works correctly with the stock Plasma effects and supports KDE Plasma/KWin 6.7 and newer. This Kubuntu branch is tested on Kubuntu 26.04.
 
-![default](screenshot.png)
+![screenshot](screenshot.webp)
 
 ## Features
 
