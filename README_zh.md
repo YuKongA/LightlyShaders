@@ -2,7 +2,7 @@
 
 # LightlyShaders v3.0
 
-LightlyShaders 用于窗口圆角，并提供可配置的内外描边和阴影处理。此效果可以与 Plasma 自带特效一起正常工作，支持 KDE Plasma/KWin 6.7 及更高版本。本 Kubuntu 分支已在 Kubuntu 26.04 上测试。
+LightlyShaders 用于窗口圆角，并提供可配置的内外描边和阴影处理。此效果可以与 Plasma 自带特效一起正常工作，支持 KDE Plasma/KWin 6.7 及更高版本。已在 Arch Linux + Plasma/KWin 6.8.2 上测试。
 
 ![screenshot](screenshot.webp)
 
@@ -17,28 +17,23 @@ LightlyShaders 用于窗口圆角，并提供可配置的内外描边和阴影�
 
 ## 依赖关系
 
-需要 Qt 6、KF6、KWin、KDecoration3、X11 和 XCB 开发包。
+需要 Qt 6、KF6、KWin、KDecoration3、X11 和 XCB。
 
-**Kubuntu 26.04 / Ubuntu 系统**：
+**Arch Linux**（Plasma/KWin 6.8）：
 
 ```bash
-sudo apt update
-sudo apt install \
-    build-essential cmake extra-cmake-modules gettext git \
-    qt6-base-dev qt6-base-private-dev qt6-tools-dev \
-    libkf6config-dev libkf6configwidgets-dev libkf6coreaddons-dev \
-    libkf6crash-dev libkf6globalaccel-dev libkf6guiaddons-dev \
-    libkf6i18n-dev libkf6kcmutils-dev libkf6kio-dev \
-    libkf6notifications-dev libkf6service-dev libkf6widgetsaddons-dev \
-    libkf6windowsystem-dev kwin-dev libkdecorations3-dev libepoxy-dev \
-    libx11-dev libxcb1-dev
+sudo pacman -S --needed base-devel cmake extra-cmake-modules gettext git \
+    qt6-base qt6-tools kwin kdecoration libepoxy libx11 libxcb \
+    vulkan-headers
 ```
+
+自 KWin 6.8 起 `kwin/core/drm_formats.h` 会包含 Vulkan 头文件，缺少 `vulkan-headers` 时配置阶段会报 `Could NOT find Vulkan`。
 
 ## 手动安装
 
 ```bash
-git clone https://github.com/YuKongA/LightlyShaders-kubuntu
-cd LightlyShaders-kubuntu; mkdir qt6build; cd qt6build
+git clone https://github.com/YuKongA/LightlyShaders
+cd LightlyShaders; mkdir qt6build; cd qt6build
 cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make
 sudo make install
 ```
@@ -83,8 +78,8 @@ TinyPasture 示例：
 - `window:TinyPasture` 只会排除主窗口，因为牧场窗口没有匹配的标题。
 - `steam_app_3167550` 会通过共同的窗口类匹配两个窗口。
 
-保存后，两个 LightlyShaders 效果都会立即重新配置。安装或升级插件后，需要注销重新登录，或者关闭再启用对应效果，以便 KWin 加载新的插件二进制文件。
+保存后，两个 LightlyShaders 效果都会立即重新配置。安装或升级插件后需要注销重新登录，KWin 才会加载新的插件二进制文件；关闭再启用效果不会重新加载插件。
 
 ## 注
 
-Plasma/KWin 更新后可能需要重新编译插件，以适配 KWin API 的变化。如果 CMake 报告缺少头文件，请先安装上面的开发包，再重新执行配置命令。
+Plasma/KWin 更新后可能需要重新编译插件，以适配 KWin API 的变化。如果 CMake 报告缺少头文件，请先安装上面列出的软件包，再重新执行配置命令。

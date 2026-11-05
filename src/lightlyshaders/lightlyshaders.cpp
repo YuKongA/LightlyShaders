@@ -30,6 +30,8 @@
 #include <effect/effect.h>
 #include <core/renderviewport.h>
 #include <QMatrix4x4>
+#include <QVersionNumber>
+#include <config-kwin.h>
 #include <KConfigGroup>
 #include <QRegularExpression>
 #include <QBitmap>
@@ -41,6 +43,15 @@ static void ensureResources()
 {
     // Must initialize resources manually because the effect is a static lib.
     Q_INIT_RESOURCE(lightlyshaders);
+}
+
+// KWin 6.8 redirects windows into an EGL swapchain, whose normalized texture
+// coordinates have their origin in the top-left corner. Older versions used a
+// plain GL texture with the origin in the bottom-left corner.
+static bool texcoordsAreTopDown()
+{
+    static const bool topDown = QVersionNumber::fromString(QString::fromLatin1(KWIN_VERSION_STRING)) >= QVersionNumber(6, 8);
+    return topDown;
 }
 
 namespace KWin {
@@ -194,7 +205,7 @@ LightlyShadersEffect::reconfigure(ReconfigureFlags flags)
     effects->addRepaintFull();
 }
 
-void
+bool
 LightlyShadersEffect::paintScreen(const RenderTarget &renderTarget, const RenderViewport &viewport, int mask, const Region &region, LogicalOutput *s)
 {
     bool set_roundness = false;
@@ -216,7 +227,7 @@ LightlyShadersEffect::paintScreen(const RenderTarget &renderTarget, const Render
         m_helper->reconfigure();
     }
 
-    effects->paintScreen(renderTarget, viewport, mask, region, s);
+    return effects->paintScreen(renderTarget, viewport, mask, region, s);
 }
 
 void
@@ -251,15 +262,14 @@ LightlyShadersEffect::isValidWindow(EffectWindow *w)
     return true;
 }
 
-void
+bool
 LightlyShadersEffect::drawWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, const Region &region, WindowPaintData &data)
 {
     QRectF screen = QRectF(static_cast<QRect>(viewport.renderRect().toRect()));
 
     if (!isValidWindow(w) || (!screen.intersects(w->frameGeometry()) && !(mask & PAINT_WINDOW_TRANSFORMED)) )
     {
-        effects->drawWindow(renderTarget, viewport, w, mask, region, data);
-        return;
+        return effects->drawWindow(renderTarget, viewport, w, mask, region, data);
     }
 
     LogicalOutput *s = w->screen();
@@ -288,6 +298,7 @@ LightlyShadersEffect::drawWindow(const RenderTarget &renderTarget, const RenderV
     const int drawOuterOutlineLocation = m_shader->uniformLocation("draw_outer_outline");
     const int squircleRatioLocation = m_shader->uniformLocation("squircle_ratio");
     const int isSquircleLocation = m_shader->uniformLocation("is_squircle");
+    const int topDownTexcoordsLocation = m_shader->uniformLocation("top_down_texcoords");
     ShaderManager *sm = ShaderManager::instance();
     sm->pushShader(m_shader.get());
 
@@ -305,12 +316,15 @@ LightlyShadersEffect::drawWindow(const RenderTarget &renderTarget, const RenderV
     m_shader->setUniform(drawOuterOutlineLocation, m_outerOutline);
     m_shader->setUniform(squircleRatioLocation, m_squircleRatio);
     m_shader->setUniform(isSquircleLocation, (m_cornersType == LSHelper::SquircledCorners));
+    m_shader->setUniform(topDownTexcoordsLocation, texcoordsAreTopDown() ? 1 : 0);
 
     glActiveTexture(GL_TEXTURE0);
 
-    OffscreenEffect::drawWindow(renderTarget, viewport, w, mask, region, data);
+    const bool ok = OffscreenEffect::drawWindow(renderTarget, viewport, w, mask, region, data);
 
     sm->popShader();
+
+    return ok;
 }
 
 QRectF

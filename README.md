@@ -2,7 +2,7 @@ English | [中文](README_zh.md)
 
 # LightlyShaders v3.0
 
-LightlyShaders rounds window corners and adds configurable outlines and shadow handling. It works correctly with the stock Plasma effects and supports KDE Plasma/KWin 6.7 and newer. This Kubuntu branch is tested on Kubuntu 26.04.
+LightlyShaders rounds window corners and adds configurable outlines and shadow handling. It works correctly with the stock Plasma effects and supports KDE Plasma/KWin 6.7 and newer. Tested on Arch Linux with Plasma/KWin 6.8.2.
 
 ![screenshot](screenshot.webp)
 
@@ -17,28 +17,23 @@ LightlyShaders rounds window corners and adds configurable outlines and shadow h
 
 ## Dependencies
 
-You need Qt 6, KF6, KWin, KDecoration3, X11, and XCB development packages.
+You need Qt 6, KF6, KWin, KDecoration3, X11, and XCB development files.
 
-**Kubuntu 26.04 / Ubuntu-based systems**:
+**Arch Linux** (Plasma/KWin 6.8):
 
 ```bash
-sudo apt update
-sudo apt install \
-    build-essential cmake extra-cmake-modules gettext git \
-    qt6-base-dev qt6-base-private-dev qt6-tools-dev \
-    libkf6config-dev libkf6configwidgets-dev libkf6coreaddons-dev \
-    libkf6crash-dev libkf6globalaccel-dev libkf6guiaddons-dev \
-    libkf6i18n-dev libkf6kcmutils-dev libkf6kio-dev \
-    libkf6notifications-dev libkf6service-dev libkf6widgetsaddons-dev \
-    libkf6windowsystem-dev kwin-dev libkdecorations3-dev libepoxy-dev \
-    libx11-dev libxcb1-dev
+sudo pacman -S --needed base-devel cmake extra-cmake-modules gettext git \
+    qt6-base qt6-tools kwin kdecoration libepoxy libx11 libxcb \
+    vulkan-headers
 ```
+
+`vulkan-headers` is pulled in by `kwin/core/drm_formats.h` since KWin 6.8; without it configuration fails with `Could NOT find Vulkan`.
 
 ## Manual installation
 
 ```bash
-git clone https://github.com/YuKongA/LightlyShaders-kubuntu
-cd LightlyShaders-kubuntu; mkdir qt6build; cd qt6build
+git clone https://github.com/YuKongA/LightlyShaders
+cd LightlyShaders; mkdir qt6build; cd qt6build
 cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make
 sudo make install
 ```
@@ -83,8 +78,8 @@ Example for TinyPasture:
 - `window:TinyPasture` excludes only the main window because the farm window has no matching title.
 - `steam_app_3167550` matches both windows through their shared window class.
 
-After saving, both LightlyShaders effects are reconfigured immediately. After installing or upgrading the plugin, log out and back in, or disable and re-enable the effects, so KWin loads the new plugin binary.
+After saving, both LightlyShaders effects are reconfigured immediately. After installing or upgrading the plugin, log out and back in so KWin loads the new plugin binary; toggling the effect off and on does not reload it.
 
 ## Note
 
-After Plasma/KWin updates, rebuild the plugin so it can follow KWin API changes. If CMake reports missing headers, install the development packages above and rerun the configure command.
+After Plasma/KWin updates, rebuild the plugin so it can follow KWin API changes. If CMake reports missing headers, install the packages listed above and rerun the configure command.
